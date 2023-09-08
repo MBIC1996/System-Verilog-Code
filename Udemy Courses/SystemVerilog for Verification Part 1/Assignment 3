@@ -1,0 +1,43 @@
+// Write a code to generate a 9MHz square waveform for the signal sclk. Assume timescale with 1nsec time-unit and 3 digit precision.
+
+`timecale 1 ns / 1ps
+
+
+
+module tb;
+
+
+
+reg clk = 1'b0;
+
+
+
+always begin
+
+
+
+#55.555;
+
+clk = ~clk;
+
+
+
+end
+
+
+
+initial begin
+
+#1000;
+
+
+
+$finish();
+
+
+
+end
+
+
+
+endmodule
