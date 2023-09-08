@@ -1,0 +1,56 @@
+/*Assume System Consist of two global signals resetn and clk. Use an initial block to initialize clk to 1'b0 and resetn to 1'b0.
+
+User must keep resetn in an active low state for 60 nSec at the start of the simulation and then make active high. Assume `timescale 1ns/1ps */
+
+`timescale 1ns / 1ps
+
+
+
+module assignment_1_tb();
+
+
+
+reg clk,rst;
+
+
+
+initial begin
+
+
+
+clk = 1'b0
+
+rst = 1'b0;
+
+
+
+#60
+
+
+
+rst = 1'b1;
+
+
+
+end
+
+
+
+initial begin
+
+$monitor("rst is : %0b at time : %0t", rst,$time);
+
+
+
+initial begin
+
+#200
+
+$finish();
+
+end
+
+
+
+endmodule
+
