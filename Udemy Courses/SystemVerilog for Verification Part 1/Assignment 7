@@ -1,0 +1,49 @@
+// Create two arrays of reg type capable of storing 15 elements. Use $urandom function to add 15 values to the array. Print the value of all the elements of the array on a single line.
+
+`timescale 1ns / 1ps;
+
+
+
+module tb();
+
+
+
+reg arr1[15];
+
+reg arr2[15];
+
+
+
+int i = 0;
+
+
+
+initial begin
+
+
+
+    repeat (15) begin
+
+       
+
+        arr1[i] = $random;
+
+        arr2[i] = $random;
+
+       
+
+        i++;
+
+    end
+
+
+
+    $display("arr1 values : %0p", arr1);
+
+    $display("arr2 values : %0p", arr2);
+
+end
+
+
+
+endmodule
