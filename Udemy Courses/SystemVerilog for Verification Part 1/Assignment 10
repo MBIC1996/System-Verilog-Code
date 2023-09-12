@@ -1,0 +1,53 @@
+// Create a Class consisting of 3 data members each of unsigned integer type. Initialize them to 45,78, and 90. Use the display function to print the values on the console.
+
+`timescale 1 ns / 1ps
+
+
+
+class example;
+
+
+
+int unsigned a,b,c;
+
+
+
+endclass
+
+
+
+module tb;
+
+
+
+
+
+example f;
+
+
+
+initial begin
+
+
+
+f = new();
+
+
+
+f.a = 32'd45;
+
+f.b = 32'd78;
+
+f.c = 32'd90;
+
+
+
+$display("Class values are a = %0d , b = %0d, and c = %0d",f.a,f.b,f.c);
+
+
+
+end
+
+
+
+endmodule
