@@ -1,0 +1,107 @@
+// Create a task that will generate stimulus for addr , wr, and en signal as mentioned in a waveform of the Instruction tab. Assume address is 6-bit wide while en and wr both are 1-bit wide. The stimulus should be sent on a positive edge of 25 MHz clock signal.
+
+`timescale 1ns / 1ps;
+
+
+
+module tb();
+
+
+
+bit clk = 0;
+
+
+
+always #20 clk = ~clk;
+
+
+
+bit en,wr = 0;
+
+bit [5:0] addr = 0;
+
+
+
+
+
+task memory_stim();
+
+@(posedge clk)
+
+
+
+en = 1'b1;
+
+wr = 1'b1;
+
+addr = 6'd12;
+
+
+
+#40;
+
+
+
+addr = 6'd14;
+
+
+
+#40;
+
+
+
+addr = 6'd23;
+
+wr = 1'b0;
+
+
+
+#40;
+
+
+
+addr = 6'd48;
+
+
+
+#40;
+
+
+
+addr = 6'd56;
+
+en = 0;
+
+
+
+#40;
+
+
+
+endtask
+
+
+
+initial begin
+
+memory_stim();
+
+end
+
+
+
+initial begin
+
+#280;
+
+
+
+$finish();
+
+
+
+end
+
+
+
+endmodule
