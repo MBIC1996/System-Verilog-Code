@@ -1,0 +1,69 @@
+// Create a function that will perform the multiplication of the two unsigned integer variables. Compare values return by function with the expected result and if both values match send "Test Passed" to Console else send "Test Failed".
+
+`timescale 1ns / 1ps;
+
+
+
+module tb();
+
+
+
+function int unsigned mult(input int unsigned a,b);
+
+
+
+return a*b;
+
+
+
+endfunction
+
+
+
+function compare(input int unsigned actual,expected);
+
+
+
+if (actual == expected)
+
+    $display("Test passed, the product is : %0d", expected);
+
+else
+
+    $display("Test failed, expected value was : %0d, actual value is %0d", expected,actual);
+
+
+
+endfunction
+
+
+
+int unsigned a = 32'd7;
+
+int unsigned b = 32'd9;   
+
+longint unsigned product = 0;
+
+longint unsigned expected = a * b;
+
+
+
+
+
+initial begin
+
+#5;
+
+product = mult(a,b);
+
+#5;
+
+compare(product,expected);
+
+
+
+end
+
+
+
+endmodule
