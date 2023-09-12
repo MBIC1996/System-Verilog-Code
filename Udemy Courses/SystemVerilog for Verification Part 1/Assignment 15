@@ -1,0 +1,73 @@
+// Assume class consists of three data members a, b, and c each of size 4-bit. Create a task inside the class that returns the result of the addition of data members. The task must also be capable of sending the value of a, b, c, and result to the console. Verify code for a = 1, b = 2, and c = 4.
+
+`timescale 1 ns / 1ps
+
+
+
+class my_class;
+
+
+
+  bit [3:0] a,b,c = 0;
+
+
+
+task add(input bit [3:0] a,input bit [3:0] b, input bit [3:0] c, output bit [4:0] result);
+
+
+
+    this.a = a;
+
+    this.b = b;
+
+    this.c = c;
+
+    result = a + b + c;
+
+ 
+
+    $display("a = %0d, b = %0d, and c = %0d",a,b,c);
+
+    $display("Therefore, the sum is %0d", result);
+
+
+
+endtask
+
+
+
+
+
+
+
+endclass
+
+
+
+module tb;
+
+
+
+my_class h; //h for handle because I'm simple
+
+
+
+  bit [4:0] sum;
+
+
+
+initial begin
+
+  h = new();
+
+  h.add(.a(1), .b(2), .c(4), .result(sum));
+
+
+
+
+
+end
+
+
+
+endmodule
