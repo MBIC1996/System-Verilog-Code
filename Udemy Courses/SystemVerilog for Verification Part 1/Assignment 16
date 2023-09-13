@@ -1,0 +1,167 @@
+Create a deep copy of the Generator class. To verify the deep copy code assign value of the copy method to another instance of the generator class in TB top. Print the value of data members in the generator class as well as copied class. Refer Instruction tab for Generator class code.
+
+
+
+// THIS IS SO CONFUSING
+
+
+
+
+
+
+
+class generator;
+
+
+
+bit[3:0] a = 5, b =7;
+
+bit wr = 1;
+
+bit en = 1;
+
+bit [4:0] s = 12;
+
+
+
+function void display();
+
+
+
+    $display("a:%0d b:%0d wr:%0d en:%0d s:%0d",a,b,wr,en,s);
+
+endfunction
+
+
+
+function generator copy();
+
+
+
+copy = new();
+
+copy.a = a;
+
+copy.b = b;
+
+copy.wr = wr;
+
+copy.en = en;
+
+copy.s = s;
+
+
+
+endfunction
+
+
+
+endclass
+
+
+
+
+
+class second;
+
+
+
+bit [3:0] c = 4;
+
+
+
+generator G;
+
+
+
+function new();
+
+G = new();
+
+endfunction
+
+
+
+function second copy();
+
+copy = new();
+
+copy.c = c;
+
+copy.G = G.copy;
+
+endfunction
+
+
+
+endclass
+
+
+
+module tb;
+
+
+
+second s1,s2;
+
+
+
+initial begin
+
+   
+
+    s1 = new();
+
+    s2 = new();
+
+
+
+s1.c = 52;
+
+
+
+s2 = s1.copy;
+
+
+
+$display("value of s1.c %0d", s1.c);
+
+$display("value of s2.c %0d",s2.c);
+
+
+
+// Now seeing if they have independent handlers
+
+
+
+s2.c = 34;
+
+
+
+s2.G.a = 10;
+
+
+
+$display("value of s1.G.a %0d", s1.G.a); // Default is 5 so this should be 5
+
+$display("value of s2.G.a %0d", s2.G.a); // We just assigned this to 10 so should stay at 10
+
+
+
+s1.G.display();
+
+s2.G.display();
+
+
+
+
+
+
+
+end
+
+
+
+
+
+endmodule
