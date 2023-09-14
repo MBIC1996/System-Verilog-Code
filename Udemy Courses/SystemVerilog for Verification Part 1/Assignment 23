@@ -1,0 +1,153 @@
+//Code for transaction class is mentioned in the Instruction tab. Write a code to send transaction data between generator and driver. Also, verify the data by printing the value of data members of Generator and Driver.
+
+`timescale 1 ns / 1ps
+
+
+
+class transaction;
+
+
+
+bit [7:0] addr = 7'h12;
+
+bit [3:0] data = 4'h4;
+
+bit we = 1'b1;
+
+bit rst = 1'b0;
+
+
+
+// Why are we using unrandomized data? Weird but I guess its so make it a simpler question
+
+
+
+endclass
+
+
+
+class generator;
+
+
+
+transaction t;
+
+mailbox mbx;
+
+
+
+function new(mailbox mbx);
+
+
+
+this.mbx = mbx;
+
+
+
+endfunction
+
+
+
+
+
+task main();
+
+
+
+t = new();
+
+mbx.put(t);
+
+$display("[GEN] DATA SENT : addr : %0d , data : %0d , we : %0d , rst : %0d", t.addr,t.data,t.we,t.rst);
+
+#10;
+
+
+
+endtask
+
+
+
+endclass
+
+
+
+class driver;
+
+
+
+transaction dc; // Data container
+
+mailbox mbx;
+
+
+
+function new(mailbox mbx);
+
+this.mbx = mbx;
+
+
+
+endfunction
+
+
+
+task main();
+
+
+
+    forever begin
+
+        mbx.get(dc);
+
+        $display("[DRV] DATA RCVD : addr : %0d , data : %0d , we : %0d , rst : %0d", dc.addr,dc.data,dc.we,dc.rst);
+
+        #10;
+
+    end
+
+endtask
+
+
+
+endclass
+
+
+
+
+
+module tb;
+
+
+
+generator GEN;
+
+driver DRV;
+
+mailbox mbx;
+
+
+
+initial begin
+
+mbx = new();
+
+GEN = new(mbx);
+
+DRV = new(mbx);
+
+
+
+    fork
+
+        GEN.main();
+
+        DRV.main();
+
+    join
+
+end
+
+
+
+endmodule
