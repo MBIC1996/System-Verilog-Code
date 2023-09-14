@@ -1,0 +1,157 @@
+// Code for transaction class is mentioned in the Instruction tab. Write a code to send transaction data between generator and driver. Also, verify the data by printing the value of data members of Generator and Driver in each transaction. Execute the code for 10 random transactions.
+
+`timescale 1 ns / 1ps
+
+
+
+class transaction;
+
+
+
+rand bit [7:0] a;
+
+rand bit [7:0] b;
+
+rand bit wr;
+
+
+
+endclass
+
+
+
+class generator;
+
+
+
+transaction t;
+
+mailbox mbx;
+
+
+
+function new(mailbox mbx);
+
+
+
+this.mbx = mbx;
+
+
+
+endfunction
+
+
+
+
+
+task main();
+
+
+
+       for (int i = 0; i <10; i++) begin
+
+        t = new();
+
+        t.randomize();
+
+        if(!t.randomize()) begin
+
+            $display(" Randomization failed at time %0t", $time);
+
+        end
+
+            mbx.put(t);
+
+            $display("[GEN] DATA SENT : a : %0d , b : %0d , wr : %0d", t.a,t.b,t.wr);
+
+            #10;
+
+       end
+
+endtask
+
+
+
+endclass
+
+
+
+class driver;
+
+
+
+transaction dc; // Data container
+
+mailbox mbx;
+
+
+
+function new(mailbox mbx);
+
+this.mbx = mbx;
+
+
+
+endfunction
+
+
+
+task main();
+
+
+
+    forever begin
+
+        mbx.get(dc);
+
+        $display("[DRV] DATA RCVD : a : %0d , b : %0d , wr : %0d", dc.a,dc.b,dc.wr);
+
+        #10;
+
+    end
+
+endtask
+
+
+
+endclass
+
+
+
+
+
+module tb;
+
+
+
+generator GEN;
+
+driver DRV;
+
+mailbox mbx;
+
+
+
+initial begin
+
+mbx = new();
+
+GEN = new(mbx);
+
+DRV = new(mbx);
+
+
+
+    fork
+
+        GEN.main();
+
+        DRV.main();
+
+    join
+
+end
+
+
+
+endmodule
