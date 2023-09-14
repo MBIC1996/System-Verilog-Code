@@ -1,0 +1,95 @@
+//Create two tasks each capable of sending a message to Console at a fixed interval. Assume Task1 sends the message "Task 1 Trigger" at an interval of 20 ns while Task2 sends the message "Task 2 Trigger" at an interval of 40 ns. Keep the count of the number of times Task 1 and Task 2 trigger by adding a variable for keeping the track of task execution and incrementing with each trigger. Execute both tasks in parallel till 200 nsec. Display the number of times Task 1 and Task 2 executed after 200 ns before calling $finish for stopping the simulation.
+
+`timescale 1 ns / 1ps
+
+
+
+
+
+module tb;
+
+
+
+int t1_count = 0;
+
+int t2_count = 0;
+
+
+
+task task1();
+
+   
+
+    forever begin
+
+        #20;
+
+        $display("Task 1 triggered at %0t",$time);
+
+        t1_count <= t1_count + 1;
+
+    end
+
+
+
+endtask
+
+
+
+task task2();
+
+   
+
+    forever begin
+
+        #40;
+
+        $display("Task 2 triggered at %0t",$time);
+
+        t2_count <= t2_count + 1;
+
+    end
+
+endtask
+
+
+
+task sim_limit();
+
+
+
+    //initial begin
+
+        #200
+
+
+
+        $display("Simulation ended at %0t",$time);
+
+        $display("Task 1 triggered %0d time(s) and Task 2 triggered %0d time(s)",t1_count,t2_count);
+
+        $finish() ;
+
+    //end
+
+endtask
+
+
+
+    initial begin
+
+        fork
+
+            task1();
+
+            task2();
+
+            sim_limit();
+
+        join
+
+    end
+
+
+
+endmodule
