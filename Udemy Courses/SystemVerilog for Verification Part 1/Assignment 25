@@ -1,0 +1,164 @@
+
+
+//                          DUT MODULE CODE
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+/*
+module top
+(
+    input clk,
+    input [3:0] a,b,
+    output reg [7:0] mul
+);
+
+    always @(posedge clk)begin
+        
+        mul <= a * b;
+
+    end
+
+endmodule
+*/
+
+//                            TB CODE
+/////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+`timescale 1 ns / 1ps
+
+class transaction;
+    randc bit [3:0] a,b;
+    randc bit [7:0] mul;
+
+    function void display();
+        $display("a : %0d \t b: %0d \t mul: %0d", a,b,mul);
+    endfunction
+
+    function transaction copy(); //Function to create deep copies of transaction when generating stimulus
+        copy = new();
+        copy.a = this.a;
+        copy.b = this.b;
+        copy.mul = this.mul;
+    endfunction
+
+endclass
+
+
+class generator;
+
+transaction tract;
+mailbox #(transaction) mbx;
+event done;
+
+
+    function new(mailbox #(transaction) mbx); //Custom constructor to sync the mailboxes 
+        this.mbx = mbx;
+        tract = new();
+    endfunction
+
+    task main();
+        for (int i = 0; i < 20; i++) begin
+            tract.randomize();
+            mbx.put(tract.copy);
+            $display("[GEN] : DATA SENT TO DRIVER");
+            tract.display();
+            #20;
+        end
+        -> done;
+    endtask
+
+endclass
+
+interface mul_if;
+
+    logic [3:0] a,b;
+    logic [7:0] mul;
+    logic clk;
+
+endinterface
+
+
+
+
+
+
+
+class driver;
+
+virtual mul_if mif;
+mailbox #(transaction) mbx;
+transaction data;
+event next;
+
+    function new(mailbox #(transaction) mbx); //Custom constructor to sync the mailboxes 
+        this.mbx = mbx;
+    endfunction
+
+
+
+    task main();
+
+        forever begin
+            mbx.get(data);          //Get transaction from shared mailbox, should be data sent by the driver
+
+            @(posedge mif.clk);     //Wait for a clock edge before updating data
+
+            mif.a <= data.a;        // Take the data from the generator 
+            mif.b <= data.b;        // and "drive" it to the interface
+        $display("[DRV] Interface Trigger");
+            data.display();
+        end
+
+    endtask
+
+endclass
+    
+
+module tb();
+
+mul_if mif();       // Calling an instance of my user defined interface "mul_if", and giving it handle mif
+driver drv;         // Calling an instance of my class driver, naming it drv 
+generator gen;      // Same thing 
+
+event done;
+
+mailbox #(transaction) mbx;
+
+    top DUT             //instantiating DUT and mapping ports to interface
+    (
+        .a(mif.a), 
+        .b(mif.b),
+        .mul(mif.mul),
+        .clk(mif.clk)
+        
+    );
+
+    initial begin       //initializing clock to value of 0
+        mif.clk <= 0;
+    end
+
+    always #10 mif.clk <= ~mif.clk; // Generating 20ns period clock
+
+    initial begin
+        mbx = new();        //Constructing objects for various classes
+        gen = new(mbx);     // Linking the generator and driver mailboxes together
+        drv = new(mbx); 
+        drv.mif = mif;      // Assigning the driver interface to the interface instantiated in our tb top
+
+        done = gen.done;
+    end 
+
+    initial begin
+        fork
+            gen.main();
+            drv.main();
+        join_none
+
+        wait(done.triggered);
+        $finish();
+    end
+
+    initial begin
+        $dumpfile("dump.vcd");
+        $dumpvars;
+    end 
+    
+endmodule
