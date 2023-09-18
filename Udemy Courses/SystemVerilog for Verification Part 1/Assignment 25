@@ -1,164 +1,269 @@
+// Create Monitor and Scoreboard Code for Synchronous 4-bit Multiplier. Stimulus is generated in Testbench top so do not add Transaction, Generator, or Driver Code. Also, add the Scoreboard model to compare the response with an expected result.
 
+//          DUT MODULE CODE 
+/////////////////////////////////////////////////////////////////
 
-//                          DUT MODULE CODE
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 /*
-module top
-(
+module top(
     input clk,
     input [3:0] a,b,
     output reg [7:0] mul
+
 );
 
-    always @(posedge clk)begin
+    always @(posedge clk) begin
         
         mul <= a * b;
 
-    end
-
+    end 
 endmodule
 */
 
-//                            TB CODE
-/////////////////////////////////////////////////////////////////////////////////////////////////////////////
 
-`timescale 1 ns / 1ps
-
-class transaction;
-    randc bit [3:0] a,b;
-    randc bit [7:0] mul;
-
-    function void display();
-        $display("a : %0d \t b: %0d \t mul: %0d", a,b,mul);
-    endfunction
-
-    function transaction copy(); //Function to create deep copies of transaction when generating stimulus
-        copy = new();
-        copy.a = this.a;
-        copy.b = this.b;
-        copy.mul = this.mul;
-    endfunction
-
-endclass
+//          TB CODE
+/////////////////////////////////////////////////////////////////
 
 
-class generator;
+interface top_if;
 
-transaction tract;
-mailbox #(transaction) mbx;
-event done;
+  logic clk;
 
+  logic [3:0] a, b;
 
-    function new(mailbox #(transaction) mbx); //Custom constructor to sync the mailboxes 
-        this.mbx = mbx;
-        tract = new();
-    endfunction
+  logic [7:0] mul;
 
-    task main();
-        for (int i = 0; i < 20; i++) begin
-            tract.randomize();
-            mbx.put(tract.copy);
-            $display("[GEN] : DATA SENT TO DRIVER");
-            tract.display();
-            #20;
-        end
-        -> done;
-    endtask
-
-endclass
-
-interface mul_if;
-
-    logic [3:0] a,b;
-    logic [7:0] mul;
-    logic clk;
+ 
 
 endinterface
 
 
 
+class transaction;
+
+    randc bit [3:0] a,b;
+
+    randc bit [7:0] mul;
 
 
 
+    function void display();
 
-class driver;
+        $display("a : %0d \t b : %0d \t mul : %0d", a,b,mul);
 
-virtual mul_if mif;
-mailbox #(transaction) mbx;
-transaction data;
-event next;
-
-    function new(mailbox #(transaction) mbx); //Custom constructor to sync the mailboxes 
-        this.mbx = mbx;
     endfunction
+
+endclass
+
+
+
+class monitor;
+
+    mailbox #(transaction) mbx;
+
+    transaction trans;
+
+    virtual top_if mif;
+
+
+
+        function new(mailbox #(transaction) mbx);
+
+            this.mbx = mbx;
+
+        endfunction
+
+
+
+    task main();
+
+     
+
+      trans = new();
+
+     
+
+        forever begin
+
+            repeat(2) @(posedge mif.clk);
+
+            trans.a = mif.a;
+
+            trans.b = mif.b;
+
+            trans.mul = mif.mul;
+
+          $display("-----------------------------");
+
+            $display("[MON] DATA SENT TO SCOREBOARD");
+
+            trans.display();
+
+            mbx.put(trans);
+
+         end
+
+    endtask
+
+
+
+endclass
+
+
+
+
+
+class scoreboard;
+
+    mailbox #(transaction) mbx;
+
+    transaction trans;
+
+
+
+    function new(mailbox #(transaction) mbx);
+
+            this.mbx = mbx;
+
+        endfunction
+
+
+
+  task compare(input transaction trans);
+
+        if(trans.mul == (trans.a * trans.b))
+
+            $display("MULT RESULT MATCH");
+
+        else
+
+            $error("MULT RESULT MISMATCH");
+
+    endtask
 
 
 
     task main();
 
         forever begin
-            mbx.get(data);          //Get transaction from shared mailbox, should be data sent by the driver
 
-            @(posedge mif.clk);     //Wait for a clock edge before updating data
+            mbx.get(trans);
 
-            mif.a <= data.a;        // Take the data from the generator 
-            mif.b <= data.b;        // and "drive" it to the interface
-        $display("[DRV] Interface Trigger");
-            data.display();
+            $display("[SCO] DATA RCVD FROM MONITOR");
+
+            trans.display();
+
+            compare(trans);
+
+            $display("-----------------------------");
+
+            #20;
+
         end
 
     endtask
 
 endclass
-    
 
-module tb();
 
-mul_if mif();       // Calling an instance of my user defined interface "mul_if", and giving it handle mif
-driver drv;         // Calling an instance of my class driver, naming it drv 
-generator gen;      // Same thing 
 
-event done;
+
+
+
+
+
+
+
+
+
+
+module tb;
+
+ 
+
+  top_if vif();
+
+  top dut (vif.clk, vif.a, vif.b, vif.mul);  // I despise using assignment by position but this is what they gave us
+
+
+
+monitor mon;
+
+scoreboard sco;
 
 mailbox #(transaction) mbx;
 
-    top DUT             //instantiating DUT and mapping ports to interface
-    (
-        .a(mif.a), 
-        .b(mif.b),
-        .mul(mif.mul),
-        .clk(mif.clk)
-        
-    );
 
-    initial begin       //initializing clock to value of 0
-        mif.clk <= 0;
+
+initial begin
+
+    vif.clk <= 0;
+
+  end
+
+ 
+
+  always #5 vif.clk <= ~vif.clk;
+
+ 
+
+  initial begin
+
+    for(int i = 0; i<20; i++) begin
+
+      repeat (2) @(posedge vif.clk);// The repeat (2) was missing so this would throw a lot of mismatch errors without this line
+
+      vif.a <= $urandom_range(1,15);
+
+      vif.b <= $urandom_range(1,15);
+
     end
 
-    always #10 mif.clk <= ~mif.clk; // Generating 20ns period clock
+   
+
+  end
+
+
 
     initial begin
-        mbx = new();        //Constructing objects for various classes
-        gen = new(mbx);     // Linking the generator and driver mailboxes together
-        drv = new(mbx); 
-        drv.mif = mif;      // Assigning the driver interface to the interface instantiated in our tb top
 
-        done = gen.done;
-    end 
+      mbx = new();
 
-    initial begin
-        fork
-            gen.main();
-            drv.main();
-        join_none
+        mon = new(mbx);
 
-        wait(done.triggered);
-        $finish();
+        sco = new(mbx);
+
+        mon.mif = vif;
+
     end
 
-    initial begin
-        $dumpfile("dump.vcd");
-        $dumpvars;
-    end 
-    
+
+
+  initial begin
+
+    fork
+
+       mon.main();
+
+       sco.main();
+
+    join
+
+  end
+
+
+
+  initial begin
+
+    $dumpfile("dump.vcd");
+
+     $dumpvars;   
+
+    #300;
+
+    $finish();
+
+  end
+
+ 
+
 endmodule
